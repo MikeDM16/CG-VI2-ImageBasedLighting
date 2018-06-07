@@ -30,6 +30,7 @@ struct InfiniteLight
   Light super;            //!< inherited light fields
 
   HDRLoaderResult hdr_map;	// lightMap
+  HDRLoaderResult cdf_map;  // cumulative distribution function
   float spherePdf;          //!< pdf of sampling the sphere
 };
 
@@ -63,13 +64,12 @@ static Vec3fa map_lookup(const InfiniteLight* self, Vec2f map_coord) {
 	x = (int)(map_coord.x * self->hdr_map.width);
 	y = self->hdr_map.height - (int)(map_coord.y * self->hdr_map.height);  // Radiance maps are -Y
 
-	/*
+	
 	// original
 	ndx = (y * self->hdr_map.width + x ) * 3;
 	pix_addr = (float *)&self->hdr_map.cols[ndx];
 	return Vec3fa(*(pix_addr+R), *(pix_addr + G), *(pix_addr + B));
-	*/
-
+	
 	/*
 	// media
 	float channels[3] = { 0, 0, 0 };
@@ -85,31 +85,6 @@ static Vec3fa map_lookup(const InfiniteLight* self, Vec2f map_coord) {
 	}
 	return Vec3fa(channels[0] / 25, channels[1] / 25, channels[2] / 25);
 	*/
-
-
-	// mediana
-
-	std::vector<float> channels[3];
-
-	for (int i = x - 1; i <= x + 1; i++) {
-		for (int j = y - 1; j <= y + 1; j++) {
-			ndx = (j * self->hdr_map.width + i) * 3;
-			pix_addr = (float *)&self->hdr_map.cols[ndx];
-			//if (ret.second == false) it = ret.first;
-			channels[0].push_back(*(pix_addr + R));
-			channels[1].push_back(*(pix_addr + G));
-			channels[2].push_back(*(pix_addr + B));
-		}
-	}
-
-	std::sort(channels[0].begin(), channels[0].end());
-
-	// print out content:
-	for (int i = 0; i < 9; i++)
-		printf("%f ", channels[0][i]);
-	printf("\n");
-
-	return Vec3fa(0, 0, 0);
 }
 
 
@@ -195,6 +170,30 @@ Light_EvalRes InfiniteLight_eval(const Light* super,
   return res;
 }
 
+//! Description
+HDRLoaderResult CreateCDF(HDRLoaderResult hdr_map)
+{
+	int total_size = hdr_map.height * hdr_map.width;
+	float sum = 0;
+
+	HDRLoaderResult cdf_map;
+	cdf_map.height = hdr_map.height;
+	cdf_map.width = hdr_map.width;
+	cdf_map.cols = new float[total_size];
+	
+	for (int i = 0; i < total_size * 3; i += 3) {
+		sum += cdf_map.cols[i/3] = 0.2126f * hdr_map.cols[i]
+								 + 0.7152f * hdr_map.cols[i + 1]
+								 + 0.0722f * hdr_map.cols[i + 2];
+	}
+
+	cdf_map.cols[0] /= sum;
+	for (int i = 1; i < total_size; i++) {
+		cdf_map.cols[i] = cdf_map.cols[i] / sum + cdf_map.cols[i-1];
+	}
+
+	return cdf_map;
+}
 
 // Exports (called from C++)
 //////////////////////////////////////////////////////////////////////////////
@@ -202,7 +201,6 @@ Light_EvalRes InfiniteLight_eval(const Light* super,
 //! Set the parameters of an ispc-side InfiniteLight object
 extern "C" void InfiniteLight_set(void* super, const char *HDRfilename)
 {
-
 	InfiniteLight* self = (InfiniteLight*)super;
 	self->hdr_map.cols = NULL;
 	self->hdr_map.height = self->hdr_map.width = 0;
@@ -214,6 +212,7 @@ extern "C" void InfiniteLight_set(void* super, const char *HDRfilename)
 			self->hdr_map.height = self->hdr_map.width = 0;
 		}
 		else {
+			self->cdf_map = CreateCDF(self->hdr_map);
 			NormalizeToT(self, 8.f); 
 		}
 	}

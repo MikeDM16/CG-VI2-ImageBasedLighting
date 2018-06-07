@@ -296,14 +296,14 @@ namespace embree
     enum Type { NONE, MATTE, GLASS, METAL, METALLIC_PAINT };
 
     ExtObjMaterial ()
-      : type(NONE), illum(0), d(1.f), Ns(1.f), Ni(1.f), Ka(0.f), Kd(1.f), Ks(0.f), Kt(1.0f),
+      : type(NONE), illum(0), d(1.f), Ns(1.f), Ni(1.f), Ka(0.f), Kd(1.f), Ks(0.f), Kt(0.0f),
         roughness(0.0f), coat_eta(1.0f), coat_roughness(0.0f), bump(0.0f), eta(1.4f), k(3.0f) {}
 
     Ref<SceneGraph::MaterialNode> select() const 
     {
       std::shared_ptr<Texture> nulltex;
       if (type == NONE) {
-        return new OBJMaterial(d,map_d,Kd,map_Kd,Ks,map_Ks,Ns,map_Ns,map_Displ);
+        return new OBJMaterial(d,map_d,Kd,map_Kd,Ks,map_Ks,Ns,map_Ns,map_Displ, Kt);
       } else if (type == MATTE) {
         if (coat_eta != 1.0f) return new MetallicPaintMaterial (Kd,zero,0.0f,eta.x);
         else                  return new OBJMaterial(1.0f,nulltex,Kd,map_Kd,Ks,nulltex,1.0f/(1E-6f+roughness),nulltex,nulltex);
