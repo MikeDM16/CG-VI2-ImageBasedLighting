@@ -18,6 +18,7 @@
 #include "../common/math/sampling.h"
 #include "../common/math/linearspace.h"
 #include "hdrloader.h"
+#include "math.h"
 
 #include <iostream>     // std::cout
 #include <algorithm>    // std::sort
@@ -146,12 +147,19 @@ namespace embree {
 			const float epsilon = s.x;
 			int i, total_size = self->hdr_map.width * self->hdr_map.height;
 			
-			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i++);
-			map_coord = Vec2f((float)(i / self->hdr_map.height - 1) / self->hdr_map.height,
-				              (float)(i % self->hdr_map.width + 1) / self->hdr_map.width); //variam de 0 a 1
+			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=100);
+			map_coord = Vec2f((float)(i / self->hdr_map.height - 1),
+				              (float)(i % self->hdr_map.width + 1)); //variam de 0 a 1
 			
+			//printf("1 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
+			const float phi = map_coord.y * float(270) / self->hdr_map.width;
+			const float theta = map_coord.x * float(180) / self->hdr_map.height;
+			//printf("a %f: %f %f - %f %f\n", self->cdf_map[i], phi, theta, sin(theta), cos(theta));
+
+			res.dir = cartesian(phi, sin(theta), cos(theta));
+			map_coord = dir2map_coord(res.dir);
+			//printf("2 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
 			res.pdf = self->pdf_map[i];
-			//res.dir = ??
 			radiance = map_lookup(self, map_coord);
 			
 			// common
