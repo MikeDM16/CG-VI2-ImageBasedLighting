@@ -8,5 +8,4 @@ x64
 kernels/config.h
 kernels/hash.h
 build
-models
 tbb

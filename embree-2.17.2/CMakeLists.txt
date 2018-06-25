@@ -398,13 +398,6 @@ add_custom_target(uninstall
 SET_PROPERTY(TARGET uninstall PROPERTY FOLDER CMakePredefinedTargets)
 
 ##############################################################
-# Copy models
-##############################################################
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tutorials/models DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tutorials)
-file(COPY ${TBB_INCLUDE_DIRS}/../bin/intel64/vc14/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
-file(COPY ${TBB_INCLUDE_DIRS}/../bin/intel64/vc14/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-
-##############################################################
 # Has to be last
 ##############################################################
 INCLUDE(CPack)
