@@ -133,8 +133,8 @@ namespace embree {
 			res.weight = Vec3fa(0.f);
 		}
 		else {
-			// uniform sample the sphere to get the direction
 			/*
+			// uniform sample the sphere to get the direction
 			const float phi = float(two_pi) * s.x;
 			const float cosTheta = 1.f - 2.f * s.y;
 			const float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
@@ -142,27 +142,29 @@ namespace embree {
 			res.pdf = self->spherePdf;
 			map_coord = dir2map_coord(res.dir); //variam de 0 a 1
 			*/
-
+			
 			// use cdf to get coord
 			const float epsilon = s.x;
 			int i, total_size = self->hdr_map.width * self->hdr_map.height;
 			
-			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=100);
-			map_coord = Vec2f((float)(i / self->hdr_map.height - 1),
-				              (float)(i % self->hdr_map.width + 1)); //variam de 0 a 1
-			
+			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=50);
+			map_coord = Vec2f((float)(i / self->hdr_map.height - 1) / self->hdr_map.height,
+				              (float)(i % self->hdr_map.width + 1) / self->hdr_map.width);
+			/*
 			//printf("1 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
-			const float phi = map_coord.y * float(270) / self->hdr_map.width;
-			const float theta = map_coord.x * float(180) / self->hdr_map.height;
+			float phi = map_coord.x * float(two_pi); //rads
+			float theta = map_coord.y * float(pi); //rads
 			//printf("a %f: %f %f - %f %f\n", self->cdf_map[i], phi, theta, sin(theta), cos(theta));
-
 			res.dir = cartesian(phi, sin(theta), cos(theta));
-			map_coord = dir2map_coord(res.dir);
+			//map_coord = dir2map_coord(res.dir);
 			//printf("2 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
+			*/
+
+			res.dir = Vec3fa(0, 0, 0);
 			res.pdf = self->pdf_map[i];
-			radiance = map_lookup(self, map_coord);
-			
+
 			// common
+			radiance = map_lookup(self, map_coord);
 			res.dist = inf;
 			res.weight = radiance / res.pdf;
 		}
