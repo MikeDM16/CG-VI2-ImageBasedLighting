@@ -148,20 +148,23 @@ namespace embree {
 			int width = self->hdr_map.width, height = self->hdr_map.height;
 			int i, total_size = width * height;
 			
-			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=50);
-			map_coord = Vec2f((float)(i / height - 1) / height,
-				              (float)(i % width + 1) / width);
+			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=100);
+			map_coord = Vec2f((float)(i / width - 1) / width,
+				              (float)(i % height + 1) / height);
 			
-			//printf("1 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
-			//float phi = map_coord.x * float(two_pi); //rads
-			//float theta = map_coord.y * float(pi); //rads
-			//printf("a %f: %f %f - %f %f\n", self->cdf_map[i], phi, theta, sin(theta), cos(theta));
-			//res.dir = cartesian(phi, sin(theta), cos(theta));
-			//map_coord = dir2map_coord(res.dir);
-			//printf("2 %f: %f %f\n", self->cdf_map[i], map_coord.x, map_coord.y);
+			float x = 2 * map_coord.x / (width - 1);
+			float y = 2 * map_coord.y / (height - 1);
+			float r = sqrtf(x * x + y * y);
+
+			float phi = atan2(y, x);
+			float theta = r * float(pi);
 			
-			res.dir = Vec3fa(0, 0, 0);
-			res.pdf = self->pdf_map[i];
+			res.dir = Vec3fa(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+
+			res.pdf = 1;
+			//res.pdf = self->spherePdf;
+			//res.pdf = self->pdf_map[i];
+			//res.pdf = self->pdf_map[i] * total_size;
 			
 			// common
 			radiance = map_lookup(self, map_coord);
@@ -235,7 +238,7 @@ namespace embree {
 			}
 			else {
 				printf("Successfully loaded HDR file\n");
-				NormalizeToT(self, 8.f);
+				NormalizeToT(self, 40.f);
 				CreateCDF(self);
 			}
 		}
