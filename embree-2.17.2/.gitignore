@@ -9,3 +9,4 @@ kernels/config.h
 kernels/hash.h
 build
 tbb
+embree-2.17.2\tutorials\common
