@@ -150,11 +150,14 @@ namespace embree {
 			int width = self->hdr_map.width, height = self->hdr_map.height;
 			int i, total_size = width * height;
 			
+			// Attempt at improving frame rate. Implementing binary search?
+			//self->cdf_map[total_size / 2] >= epsilon ? i = total_size / 2 : i = 0;
+			
 			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=50);
-			map_coord = Vec2f((float)(i / width - 1) / width,
+			map_coord = Vec2f((float)(i / width  - 1) / width,
 				              (float)(i % height + 1) / height);
 			
-			float x = 2 * map_coord.x / (width - 1);
+			float x = 2 * map_coord.x / (width  - 1);
 			float y = 2 * map_coord.y / (height - 1);
 			float r = sqrtf(x * x + y * y);
 
