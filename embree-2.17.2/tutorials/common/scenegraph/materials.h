@@ -119,7 +119,7 @@ namespace embree
     OBJMaterial (float d, const Vec3fa& Kd, const Vec3fa& Ks, const float Ns)
       : base(MATERIAL_OBJ), illum(0), d(d), Ns(Ns), Ni(1.f), Ka(0.f), Kd(Kd), Ks(Ks), Kt(1.0f), map_d(nullptr), map_Kd(nullptr), map_Displ(nullptr) {}
 
-    OBJMaterial (float d, const std::shared_ptr<Texture> map_d, 
+	OBJMaterial (float d, const std::shared_ptr<Texture> map_d,
                  const Vec3fa& Kd, const std::shared_ptr<Texture> map_Kd, 
                  const Vec3fa& Ks, const std::shared_ptr<Texture> map_Ks, 
                  const float Ns, const std::shared_ptr<Texture> map_Ns, 
@@ -127,6 +127,16 @@ namespace embree
       : base(MATERIAL_OBJ), illum(0), d(d), Ns(Ns), Ni(1.f), Ka(0.f), Kd(Kd), Ks(Ks), Kt(1.0f), 
       map_d(nullptr), map_Kd(nullptr), map_Ks(nullptr), map_Ns(nullptr), map_Displ(nullptr),
       _map_d(map_d), _map_Kd(map_Kd), _map_Ks(map_Ks), _map_Ns(map_Ns), _map_Displ(map_Displ) {}
+
+	OBJMaterial(float d, const std::shared_ptr<Texture> map_d,
+		const Vec3fa& Kd, const std::shared_ptr<Texture> map_Kd,
+		const Vec3fa& Ks, const std::shared_ptr<Texture> map_Ks,
+		const float Ns, const std::shared_ptr<Texture> map_Ns,
+		const std::shared_ptr<Texture> map_Displ, const Vec3fa& Kt)
+		: base(MATERIAL_OBJ), illum(0), d(d), Ns(Ns), Ni(1.f), Ka(0.f), Kd(Kd), Ks(Ks), Kt(Kt),
+		map_d(nullptr), map_Kd(nullptr), map_Ks(nullptr), map_Ns(nullptr), map_Displ(nullptr),
+		_map_d(map_d), _map_Kd(map_Kd), _map_Ks(map_Ks), _map_Ns(map_Ns), _map_Displ(map_Displ) {}
+
 
     virtual Material* material() 
     { 

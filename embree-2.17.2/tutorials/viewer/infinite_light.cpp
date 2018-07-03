@@ -24,6 +24,7 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 
+unsigned int countador = 0;
 namespace embree {
 
 	struct InfiniteLight
@@ -120,7 +121,7 @@ namespace embree {
 		const DifferentialGeometry& dg,
 		const Vec2f& s)
 	{
-		const InfiniteLight* self = (InfiniteLight*)super;
+		InfiniteLight* self = (InfiniteLight*)super;
 		Light_SampleRes res;
 		Vec2f map_coord;
 		Vec3fa radiance;
@@ -133,7 +134,7 @@ namespace embree {
 			res.weight = Vec3fa(0.f);
 		}
 		else {
-			/*
+			/*/
 			// uniform sample the sphere to get the direction
 			const float phi = float(two_pi) * s.x;
 			const float cosTheta = 1.f - 2.f * s.y;
@@ -141,14 +142,15 @@ namespace embree {
 			res.dir = cartesian(phi, sinTheta, cosTheta);
 			res.pdf = self->spherePdf;
 			map_coord = dir2map_coord(res.dir); //variam de 0 a 1
-			*/
+			/**/
 			
 			// use cdf to get coord
+			/**/
 			const float epsilon = s.x;
 			int width = self->hdr_map.width, height = self->hdr_map.height;
 			int i, total_size = width * height;
 			
-			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=100);
+			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=50);
 			map_coord = Vec2f((float)(i / width - 1) / width,
 				              (float)(i % height + 1) / height);
 			
@@ -161,7 +163,12 @@ namespace embree {
 			
 			res.dir = Vec3fa(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
 
+			//res.pdf = self->pdf_map[i] * total_size;
+			//self->spherePdf = (float)(self->pdf_map[i] * total_size);
+			//printf("Inside sample %d: %f %f dir(%f, %f, %f)\n", countador++, self->spherePdf, res.pdf, res.dir.x, res.dir.y, res.dir.z);
 			res.pdf = 1;
+			self->spherePdf = res.pdf;
+			/**/
 			//res.pdf = self->spherePdf;
 			//res.pdf = self->pdf_map[i];
 			//res.pdf = self->pdf_map[i] * total_size;
@@ -190,6 +197,7 @@ namespace embree {
 			map_coord = dir2map_coord(dir);
 			res.value = map_lookup(self, map_coord);
 			res.pdf = self->spherePdf;
+			//printf("Inside eval %d: %f %f dir(%f, %f, %f)\n", countador, self->spherePdf, res.pdf, dir.x, dir.y, dir.z);
 		}
 
 		return res;
