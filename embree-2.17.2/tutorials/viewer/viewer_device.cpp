@@ -795,7 +795,7 @@ namespace embree {
 	static void add_InfiniteLight() {
 		const int totalNewLights = 1;
 		const int totalPreviousLights = g_ispc_scene->numLights;
-		const int light_map = 0;
+		const int light_map = 5;
 		const char* HDRfilename[9] = { "beach_probe.hdr", "building_probe.hdr", "campus_probe.hdr",
 			"galileo_probe.hdr", "grace_probe.hdr", "kitchen_probe.hdr",
 			"rnl_probe.hdr", "stpeters_probe.hdr", "uffizi0_probe.hdr" };

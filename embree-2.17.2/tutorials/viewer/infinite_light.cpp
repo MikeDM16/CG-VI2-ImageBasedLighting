@@ -24,7 +24,6 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 
-unsigned int countador = 0;
 namespace embree {
 
 	struct InfiniteLight
@@ -125,7 +124,7 @@ namespace embree {
 
 			// If the element is present at the middle 
 			// itself
-			if ((arr[mid] - 0.000001) < x && (arr[mid] + 0.000001) < x)
+			if (arr[mid] > x - 0.00001 && arr[mid] < x + 0.00001)
 				return mid;
 
 			// If element is smaller than mid, then 
@@ -171,18 +170,12 @@ namespace embree {
 			/*/
 			
 			// use cdf to get coord
-			/**/
+			
 			const float epsilon = s.x;
 			int width = self->hdr_map.width, height = self->hdr_map.height;
 			int i, total_size = width * height;
 			
-			// Attempt at improving frame rate. Implementing binary search?
-			self->cdf_map[total_size / 2] >= epsilon ? i = total_size / 2 : i = 0;
-			
-			//for (; i < total_size && self->cdf_map[i] < epsilon; i+=50) {};
-
-			//printf("self->cdf_map[%d]: %10.15f\n", i, self->cdf_map[i]);
-			i = binarySearch(self->cdf_map, i, total_size, epsilon);
+			i = binarySearch(self->cdf_map, 0, total_size-1, epsilon);
 
 			map_coord = Vec2f((float)(i / width  - 1) / width,
 				              (float)(i % height + 1) / height);
@@ -195,17 +188,10 @@ namespace embree {
 			float theta = r * float(pi);
 			
 			res.dir = Vec3fa(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
-
-			//res.pdf = self->pdf_map[i] * total_size;
-			//self->spherePdf = (float)(self->pdf_map[i] * total_size);
-			//printf("Inside sample %d: %f %f dir(%f, %f, %f)\n", countador++, self->spherePdf, res.pdf, res.dir.x, res.dir.y, res.dir.z);
-			//res.pdf = self->pdf_map[i];
-			
-			//res.pdf = self->spherePdf;
-			//res.pdf = self->pdf_map[i];
-			res.pdf = self->pdf_map[i] * total_size;
+			res.pdf = 1; //self->pdf_map[i] * total_size;
 			self->spherePdf = res.pdf;
 			/**/
+
 			// common
 			radiance = map_lookup(self, map_coord);
 			res.dist = inf;
@@ -230,7 +216,6 @@ namespace embree {
 			map_coord = dir2map_coord(dir);
 			res.value = map_lookup(self, map_coord);
 			res.pdf = self->spherePdf;
-			//printf("Inside eval %d: %f %f dir(%f, %f, %f)\n", countador, self->spherePdf, res.pdf, dir.x, dir.y, dir.z);
 		}
 
 		return res;
@@ -269,7 +254,7 @@ namespace embree {
 		InfiniteLight* self = (InfiniteLight*)super;
 		self->hdr_map.cols = NULL;
 		self->hdr_map.height = self->hdr_map.width = 0;
-		self->spherePdf = .25f / (float)pi;   // this is 1 / (4* PI) steradians 
+		self->spherePdf = .5f / (float)pi;   // this is 1 / (4* PI) steradians 
 
 		if (HDRfilename) {  // read HDR file
 			if (!HDRLoader::load(HDRfilename, self->hdr_map)) {
@@ -279,7 +264,7 @@ namespace embree {
 			}
 			else {
 				printf("Successfully loaded HDR file\n");
-				NormalizeToT(self, 8.f);
+				NormalizeToT(self, 40.f);
 				CreateCDF(self);
 			}
 		}
