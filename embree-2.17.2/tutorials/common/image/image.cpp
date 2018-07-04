@@ -67,6 +67,7 @@ namespace embree
   /*! stores an image to file with auto-detection of format */
   void storeImage(const Ref<Image>& img, const FileName& fileName)
   {
+	  
     std::string ext = toLowerCase(fileName.ext());
 
 #ifdef EMBREE_TUTORIALS_LIBJPEG

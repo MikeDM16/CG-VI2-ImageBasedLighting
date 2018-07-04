@@ -17,7 +17,7 @@
 #include "../common/math/random_sampler.h"
 #include "../common/core/differential_geometry.h"
 #include "../common/tutorial/tutorial_device.h"
-#include "../common/tutorial/scene_device.h"  
+#include "../common/tutorial/scene_device.h"
 #include "infinite_light.h"
 
 namespace embree { 
@@ -882,7 +882,6 @@ namespace embree {
 
 		/* 1st frame */
 		if (frameID == 0) {
-
 			if (g_subdiv_mode) {
 				updateEdgeLevels(g_ispc_scene, camera.xfm.p);
 				rtcCommit(g_scene);
@@ -926,6 +925,13 @@ namespace embree {
 			for (size_t i = 0; i < width*height; i++) ProgBuffer[i] = Vec3fa(0.f);
 			ProgBuffer_count = 0;
 
+		}
+
+		if (frameID == 20 || frameID == 200 || frameID == 2000) {
+			std::string extension(".tga");
+			Ref<Image> image = new Image4uc(width, height, (Col4uc*)pixels, true, "", true);
+			storeImage(image, std::to_string(frameID) + extension);
+			printf("Saved image at frame %d\n", frameID);
 		}
 
 		// increment frame counter 
