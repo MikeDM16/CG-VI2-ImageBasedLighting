@@ -117,6 +117,32 @@ namespace embree {
 		return true;
 	}
 
+	int binarySearch(float arr[], int l, int r, float x)
+	{
+		if (r >= l)
+		{
+			int mid = l + (r - l) / 2;
+
+			// If the element is present at the middle 
+			// itself
+			if ((arr[mid] - 0.000001) < x && (arr[mid] + 0.000001) < x)
+				return mid;
+
+			// If element is smaller than mid, then 
+			// it can only be present in left subarray
+			if (arr[mid] > x)
+				return binarySearch(arr, l, mid - 1, x);
+
+			// Else the element can only be present
+			// in right subarray
+			return binarySearch(arr, mid + 1, r, x);
+		}
+
+		// We reach here when element is not 
+		// present in array
+		return -1;
+	}
+
 	Light_SampleRes InfiniteLight_sample(const Light* super,
 		const DifferentialGeometry& dg,
 		const Vec2f& s)
@@ -142,7 +168,7 @@ namespace embree {
 			res.dir = cartesian(phi, sinTheta, cosTheta);
 			res.pdf = self->spherePdf;
 			map_coord = dir2map_coord(res.dir); //variam de 0 a 1
-			/**/
+			/*/
 			
 			// use cdf to get coord
 			/**/
@@ -151,9 +177,13 @@ namespace embree {
 			int i, total_size = width * height;
 			
 			// Attempt at improving frame rate. Implementing binary search?
-			//self->cdf_map[total_size / 2] >= epsilon ? i = total_size / 2 : i = 0;
+			self->cdf_map[total_size / 2] >= epsilon ? i = total_size / 2 : i = 0;
 			
-			for (i = 0; i < total_size && self->cdf_map[i] < epsilon; i+=50);
+			//for (; i < total_size && self->cdf_map[i] < epsilon; i+=50) {};
+
+			//printf("self->cdf_map[%d]: %10.15f\n", i, self->cdf_map[i]);
+			i = binarySearch(self->cdf_map, i, total_size, epsilon);
+
 			map_coord = Vec2f((float)(i / width  - 1) / width,
 				              (float)(i % height + 1) / height);
 			
@@ -169,13 +199,13 @@ namespace embree {
 			//res.pdf = self->pdf_map[i] * total_size;
 			//self->spherePdf = (float)(self->pdf_map[i] * total_size);
 			//printf("Inside sample %d: %f %f dir(%f, %f, %f)\n", countador++, self->spherePdf, res.pdf, res.dir.x, res.dir.y, res.dir.z);
-			res.pdf = 1;
-			self->spherePdf = res.pdf;
-			/**/
+			//res.pdf = self->pdf_map[i];
+			
 			//res.pdf = self->spherePdf;
 			//res.pdf = self->pdf_map[i];
-			//res.pdf = self->pdf_map[i] * total_size;
-			
+			res.pdf = self->pdf_map[i] * total_size;
+			self->spherePdf = res.pdf;
+			/**/
 			// common
 			radiance = map_lookup(self, map_coord);
 			res.dist = inf;
@@ -249,7 +279,7 @@ namespace embree {
 			}
 			else {
 				printf("Successfully loaded HDR file\n");
-				NormalizeToT(self, 40.f);
+				NormalizeToT(self, 8.f);
 				CreateCDF(self);
 			}
 		}
